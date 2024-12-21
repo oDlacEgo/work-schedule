@@ -6,7 +6,7 @@
     <title>Work Schedule Manager</title>
     <style>
         body {
-            font-family: 'Open Sans', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 2px;
             padding: 0;
         }
@@ -25,10 +25,6 @@
             color: white;
             font-weight: bold;
         }
-		.station-column {
-		font-weight: bold;		
-		}
-
         .button {
             padding: 1px 8px;
             cursor: pointer;
@@ -36,14 +32,14 @@
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: 10px;
         }
         .button:hover {
             background-color: #45a049;
         }
         select {
             width: 70%;
-            font-size: 12px;
+            font-size: 10px;
         }
         .footer {
             text-align: center;
@@ -54,14 +50,14 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            width: 50%;
+            width: 30%;
         }
         h2 {
             margin-top: 0;
-            font-size: 12px;
+            font-size: 14px;
         }
         #employeeListTable {
-            width: 50%;
+            width: 30%;
         }
         #scheduleTable {
             width: 100%;
@@ -71,12 +67,12 @@
         }
         #scheduleTable td, #scheduleTable th {
             padding: 2px;
-            font-size: 12px;
+            font-size: 10px;
             white-space: nowrap;
         }
         #employeeListTable td, #employeeListTable th {
             padding: 3px;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         #stationsList tr:hover, #employeesList tr:hover {
@@ -88,19 +84,19 @@
         }
 
         #employeeName {
-            font-size: 12px;
+            font-size: 10px;
             padding: 3px;
-            width: 120px;
+            width: 70px;
         }
 
         #employeeColor {
-            font-size: 12px;
+            font-size: 10px;
             padding: 3px;
             width: 100%;
         }
 
         #addEmployeeBtn {
-            font-size: 12px;
+            font-size: 10px;
             padding: 3px 8px;
         }
 
@@ -112,18 +108,6 @@
             background-color: orange !important;
             color: white !important;
         }
-        .group-color-1 {
-            background-color: #e8f5e9;
-        }
-        .group-color-2 {
-            background-color: #e3f2fd;
-        }
-        .group-color-3 {
-            background-color: #fbe9e7;
-        }
-        .group-color-4 {
-            background-color: #f3e5f5;
-        }
     </style>
 </head>
 <body>
@@ -132,7 +116,7 @@
         <thead>
             <tr>
                 <th>G</th>
-                <th class="station-column">Station</th>
+                <th>Station</th>
                 <th>08:00</th>
                 <th>09:00</th>
                 <th>10:00</th>
@@ -305,29 +289,15 @@
                     const stationsList = document.getElementById('stationsList');
                     stationsList.innerHTML = '';
 
-                    let colorIndex = 0;
-                    const colors = ['group-color-1', 'group-color-2', 'group-color-3', 'group-color-4'];
-                    let previousGroup = '';
-
                     sortedStations.forEach(station => {
-                        const group = stations[station].group || 'No Group';
-                        if (group !== previousGroup) {
-                            colorIndex = (colorIndex + 1) % colors.length;
-                            previousGroup = group;
-                        }
-
                         const row = document.createElement('tr');
-                        row.classList.add(colors[colorIndex]);
-
                         const groupCell = document.createElement('td');
-                        groupCell.textContent = group;
+                        groupCell.textContent = stations[station].group || 'No Group';
                         row.appendChild(groupCell);
 
-						const stationCell = document.createElement('td');
-						stationCell.textContent = station;
-						stationCell.classList.add('station-column');
-						row.appendChild(stationCell);
-
+                        const stationCell = document.createElement('td');
+                        stationCell.textContent = station;
+                        row.appendChild(stationCell);
 
                         const stationData = stations[station];
                         for (let hour = 8; hour <= 19; hour++) {
@@ -471,8 +441,7 @@
             const confirmReset = confirm("Are you sure you want to reset the schedule?");
             if (confirmReset) {
                 for (const station in stations) {
-
-                const stationData = stations[station];
+                    const stationData = stations[station];
                     for (let hour = 8; hour <= 19; hour++) {
                         const hourKey = `hour_${hour}`;
                         delete stationData[hourKey];
