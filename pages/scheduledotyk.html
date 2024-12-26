@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 1em;
-            font-size: 0.8em;
+            font-size: 0.8em;            
         }
         .employee-list {
             position: sticky;
@@ -61,15 +61,14 @@
         .drop-target.over {
             background-color: #d3d3f3;
         }
+        .drop-target.selected {
+            background-color: #ffcccb;
+        }
         .assigned-employee {
             cursor: pointer;
             font-weight: normal;
             color: inherit;
             text-decoration: none;
-        }
-        .assigned-employee.highlighted-employee {
-            font-weight: bold;
-            color: #d9534f;
         }
         th.hour-cell {
             cursor: pointer;
@@ -77,10 +76,6 @@
         th.hour-cell.selected {
             background-color: #ffebcc;
         }
-        /* Efekt hover */
-        tr:hover {
-            background-color: #AAAAAA;
-        }		
     </style>
 </head>
 <body>
@@ -124,13 +119,13 @@
 
         // Firebase configuration
         const firebaseConfig = {
-			apiKey: "AIzaSyAeBlaGdh4f4Z2qjsOR2Ib7QvHfg0OtVzM",
-			authDomain: "work-schedule-dc5aa.firebaseapp.com",
-			databaseURL: "https://work-schedule-dc5aa-default-rtdb.europe-west1.firebasedatabase.app",
-			projectId: "work-schedule-dc5aa",
-			storageBucket: "work-schedule-dc5aa.firebasestorage.app",
-			messagingSenderId: "1027800982553",
-			appId: "1:1027800982553:web:6b60be4c4ddc99a5a83688"
+            apiKey: "AIzaSyDUO5c-1RSGpGspdAStcGmrEVb0qD0FbnU",
+            authDomain: "emsd-cef45.firebaseapp.com",
+            databaseURL: "https://emsd-cef45-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "emsd-cef45",
+            storageBucket: "emsd-cef45.appspot.com",
+            messagingSenderId: "573007211940",
+            appId: "1:573007211940:web:651a9d8785eb14a0ea2531"
         };
 
         // Initialize Firebase
@@ -184,9 +179,14 @@
                     }
 
                     button.addEventListener('click', () => {
+                        // Remove highlight from other employees
                         const allButtons = document.querySelectorAll('.employee-list button');
                         allButtons.forEach(btn => btn.classList.remove('highlighted-employee'));
+
+                        // Highlight the clicked employee
                         button.classList.add('highlighted-employee');
+
+                        // Enable adding the employee to the table
                         enableEmployeeAddition(button.textContent);
                     });
 
@@ -209,6 +209,11 @@
                     const stationName = cell.getAttribute('data-station');
                     const hour = cell.getAttribute('data-hour');
 
+                    if (isEmployeeAssigned(employeeName, hour)) {
+                        alert(`Employee ${employeeName} is already assigned for hour ${hour}.`);
+                        return;
+                    }
+
                     assignEmployeeToStation(employeeName, stationName, hour);
                 });
             });
@@ -217,21 +222,27 @@
         function renderScheduleTable() {
             scheduleTable.innerHTML = '';
 
-            const sortedStations = Object.values(stationsData).sort((a, b) => a.group.localeCompare(b.group));
+            const sortedStations = Object.keys(stationsData).sort((a, b) => {
+                const groupA = stationsData[a].group || '';
+                const groupB = stationsData[b].group || '';
 
-            sortedStations.forEach(station => {
+                if (groupA === groupB) {
+                    return stationsData[a].name.localeCompare(stationsData[b].name);
+                }
+                return groupA.localeCompare(groupB);
+            });
+
+            sortedStations.forEach(stationId => {
+                const station = stationsData[stationId];
                 const row = document.createElement('tr');
-
                 row.innerHTML = `<td>${station.group || ''}</td><td class="station-name" data-station="${station.name}"><strong>${station.name}</strong></td>` +
                     new Array(12).fill(0).map((_, index) => {
                         const hour = index + 8;
-                        const employees = (scheduleData[hour]?.[station.name]?.employees) || [];
-
+                        const employees = (scheduleData[hour] && scheduleData[hour][station.name]?.employees) || [];
                         return `<td class="drop-target" data-station="${station.name}" data-hour="${hour}">` +
-                            employees.map(emp => `<span class="assigned-employee ${isEmployeeOverLimit(emp, station.name) ? 'highlighted-employee' : ''}" data-employee="${emp}">${emp}</span>`).join(', ') +
+                            employees.map(emp => `<span class="assigned-employee" data-employee="${emp}">${emp}</span>`).join(', ') +
                             `</td>`;
                     }).join('');
-
                 scheduleTable.appendChild(row);
             });
 
@@ -259,6 +270,11 @@
                     const { name: employeeName } = JSON.parse(e.dataTransfer.getData('text/plain'));
                     const stationName = cell.getAttribute('data-station');
                     const hour = cell.getAttribute('data-hour');
+
+                    if (isEmployeeAssigned(employeeName, hour)) {
+                        alert(`Employee ${employeeName} is already assigned for hour ${hour}.`);
+                        return;
+                    }
 
                     assignEmployeeToStation(employeeName, stationName, hour);
                 });
@@ -345,20 +361,6 @@
                     renderEmployeeList();
                     renderScheduleTable();
                 });
-        }
-
-        function isEmployeeOverLimit(employeeName, stationName) {
-            const totalAssignments = Object.keys(scheduleData).reduce((count, hour) => {
-                if (scheduleData[hour]?.[stationName]?.employees.includes(employeeName)) {
-                    count++;
-                }
-                return count;
-            }, 0);
-
-            const station = Object.values(stationsData).find(st => st.name === stationName);
-            const limit = parseInt(station?.hourLimit || Infinity);
-
-            return totalAssignments > limit;
         }
 
         resetScheduleButton.addEventListener('click', () => {
